@@ -42,36 +42,56 @@ def precipitation():
     session.close()
 
     # Convert list of tuples into a dictionary
-    all_passengers = []
-    for name, age, sex in results:
-        passenger_dict = {}
-        passenger_dict["name"] = name
-        passenger_dict["age"] = age
-        passenger_dict["sex"] = sex
-        all_passengers.append(passenger_dict)
+    prcp_list = []
+    for date, prcp in results:
+        prcp_dict = {}
+        prcp_dict[date] = prcp
+        prcp_list.append(prcp_dict)
 
-    return jsonify(prcp_dict)
+    return jsonify(prcp_list)
 
 
 @app.route("/api/v1.0/stations")
 def stations():
     session = Session(engine)
 
-    """Return a list of the stations"""
+    """Returning a list of all the stations"""
+    # getting all the stations
     results = session.query(Station.station).all()
 
+    # closing session
     session.close()
-
+    
+    # converting results into a list
     station_list = list(np.ravel(results))
 
     return jsonify(station_list)
 
-# @app.route("/api/v1.0/tobs")
-# def tobs():
-#     # Create our session (link) from Python to the DB
-#     session = Session(engine)
+@app.route("/api/v1.0/tobs")
+def tobs():
 
-#     return null
+    session = Session(engine)
+
+    """Returning a list of the stats for the most active station"""
+    # finding the most active station
+    sel = [Measurement.station, func.count(Measurement.prcp)]
+    station_counts = session.query(*sel).group_by(Measurement.station).order_by(sel[1]).all()
+    most_active = station_counts[-1][0]
+
+    # doing calculations for most active
+    sel = [Measurement.station, 
+       func.min(Measurement.tobs), 
+       func.max(Measurement.tobs), 
+       func.avg(Measurement.tobs)]
+    results = session.query(*sel).filter(Measurement.station == most_active).all()
+
+    # closing session
+    session.close()
+
+    # converting results into a list to jsonify
+    most_active_stats = list(np.ravel(results))
+
+    return jsonify(most_active_stats)
 
 if __name__ == '__main__':
     app.run(debug=True)
