@@ -28,7 +28,7 @@ def welcome():
         f"<li><a href=http://127.0.0.1:5000/api/v1.0/stations>/api/v1.0/stations</a></li>"
         f"<li><a href=http://127.0.0.1:5000/api/v1.0/tobs>/api/v1.0/tobs</a></li>"
         f"<li><a href=http://127.0.0.1:5000/api/v1.0/<start>/api/v1.0/<start></a></li>"
-        f"<li><a href=http://127.0.0.1:5000/api/v1.0/<start><end>/api/v1.0/<start><end></a></li></ul>"
+        f"<li><a href=http://127.0.0.1:5000/api/v1.0/<start>/<end>/api/v1.0/<start>/<end></a></li></ul>"
     )
 
 
@@ -43,14 +43,15 @@ def precipitation():
     # closing the session
     session.close()
 
-    # Converting list of tuples into a list of dictionaries
-    prcp_list = []
+    # Converting list of tuples into a dictionary
+    prcp_dict = {}
     for date, prcp in results:
-        prcp_dict = {}
-        prcp_dict[date] = prcp
-        prcp_list.append(prcp_dict)
+        if prcp_dict[date]:
+            prcp_dict[date] += prcp
+        else:
+            prcp_dict[date] = prcp
 
-    return jsonify(prcp_list)
+    return jsonify(prcp_dict)
 
 
 @app.route("/api/v1.0/stations")
@@ -96,8 +97,27 @@ def tobs():
     return jsonify(most_active_stats)
 
 @app.route("/api/v1.0/<start>")
-def start():
-    return null
+@app.route("/api/v1.0/<start>/<end>")
+def start_end(start = None, end = None):
+    session = Session(engine)
+    if end != None:
+        sel = [func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
+        results = session.query(*sel).filter((Measurement.date >= start) and (Measurement.date <= end)).all()
+
+        start_end_date = list(np.ravel(results))
+        # closing session
+        session.close()
+        return jsonify(start_end_date)
+    else:
+        sel = [func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)]
+        results = session.query(*sel).filter(Measurement.date >= start).all()
+
+        start_date = list(np.ravel(results))
+
+        # closing session
+        session.close()
+        return jsonify(start_date)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
