@@ -37,37 +37,34 @@ def precipitation():
     session = Session(engine)
 
     """This query returns the last 12 months of precipitation data"""
-    twelve_months = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= '2016-08-23').order_by(Measurement.date).all()
+    results = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= '2016-08-23').order_by(Measurement.date).all()
 
     session.close()
 
     # Convert list of tuples into a dictionary
-    prcp_dict = dict(np.ravel(twelve_months))
+    all_passengers = []
+    for name, age, sex in results:
+        passenger_dict = {}
+        passenger_dict["name"] = name
+        passenger_dict["age"] = age
+        passenger_dict["sex"] = sex
+        all_passengers.append(passenger_dict)
 
     return jsonify(prcp_dict)
 
 
-# @app.route("/api/v1.0/stations")
-# def passengers():
-#     # Create our session (link) from Python to the DB
-#     session = Session(engine)
+@app.route("/api/v1.0/stations")
+def stations():
+    session = Session(engine)
 
-#     """Return a list of passenger data including the name, age, and sex of each passenger"""
-#     # Query all passengers
-#     results = session.query(Passenger.name, Passenger.age, Passenger.sex).all()
+    """Return a list of the stations"""
+    results = session.query(Station.station).all()
 
-#     session.close()
+    session.close()
 
-#     # Create a dictionary from the row data and append to a list of all_passengers
-#     all_passengers = []
-#     for name, age, sex in results:
-#         passenger_dict = {}
-#         passenger_dict["name"] = name
-#         passenger_dict["age"] = age
-#         passenger_dict["sex"] = sex
-#         all_passengers.append(passenger_dict)
+    station_list = list(np.ravel(results))
 
-#     return jsonify(all_passengers)
+    return jsonify(station_list)
 
 # @app.route("/api/v1.0/tobs")
 # def tobs():
