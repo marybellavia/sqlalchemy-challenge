@@ -28,7 +28,7 @@ def welcome():
         f"<li><a href=http://127.0.0.1:5000/api/v1.0/stations>/api/v1.0/stations</a></li>"
         f"<li><a href=http://127.0.0.1:5000/api/v1.0/tobs>/api/v1.0/tobs</a></li>"
         f"<li><a href=http://127.0.0.1:5000/api/v1.0/<start>/api/v1.0/<start></a></li>"
-        f"<li><a href=http://127.0.0.1:5000/api/v1.0/<start>/<end>>/api/v1.0/<start>/<end></a></li></ul>"
+        f"<li><a href=http://127.0.0.1:5000/api/v1.0/<start><end>/api/v1.0/<start><end></a></li></ul>"
     )
 
 
@@ -37,11 +37,13 @@ def precipitation():
     session = Session(engine)
 
     """This query returns the last 12 months of precipitation data"""
+    # gettign the precipitation data from the the last year
     results = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= '2016-08-23').order_by(Measurement.date).all()
 
+    # closing the session
     session.close()
 
-    # Convert list of tuples into a dictionary
+    # Converting list of tuples into a list of dictionaries
     prcp_list = []
     for date, prcp in results:
         prcp_dict = {}
@@ -92,6 +94,10 @@ def tobs():
     most_active_stats = list(np.ravel(results))
 
     return jsonify(most_active_stats)
+
+@app.route("/api/v1.0/<start>")
+def start():
+    return null
 
 if __name__ == '__main__':
     app.run(debug=True)
